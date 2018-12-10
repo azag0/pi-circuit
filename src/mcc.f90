@@ -37,23 +37,21 @@ subroutine simulate_annealing(circuit, n_nodes, target_resistance, n_steps)
     end do
     circuit = circuit_best
 
-contains
-
-    function switch_resistor(circuit, n_nodes) result(switched)
-        integer, intent(in) :: circuit(:, :)
-        integer :: switched(2, size(circuit, 2))
-
-        integer :: i_node, j_node, n_nodes, i_resistor
-
-        call random_integer(i_resistor, size(circuit, 2))
-        call random_integer(i_node, n_nodes)
-        call random_integer(j_node, n_nodes-1)
-        if (j_node == i_node) j_node = n_nodes
-        switched = circuit
-        switched(:, i_resistor) = [i_node, j_node]
-    end function
-
 end subroutine
+
+function switch_resistor(circuit, n_nodes) result(switched)
+    integer, intent(in) :: circuit(:, :)
+    integer :: switched(2, size(circuit, 2))
+
+    integer :: i_node, j_node, n_nodes, i_resistor
+
+    call random_integer(i_resistor, size(circuit, 2))
+    call random_integer(i_node, n_nodes)
+    call random_integer(j_node, n_nodes-1)
+    if (j_node == i_node) j_node = n_nodes
+    switched = circuit
+    switched(:, i_resistor) = [i_node, j_node]
+end function
 
 real(8) function get_resistance(circuit) result(res)
     integer, intent(in) :: circuit(:, :)

@@ -25,7 +25,7 @@ test_mcc.o: mcc.o
 f2py: libmcc
 
 libmcc: mcc.f90
-	$(F2PY) -c $< --fcompiler=$(FVENDOR) -m $@
+	$(F2PY) -c --fcompiler=$(FVENDOR) -m $@ $< only: simulate_annealing, get_resistance, random_integer:
 
 clean:
 	rm -rf *.mod *.so *.so.dSYM *.o
