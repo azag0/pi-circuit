@@ -1,0 +1,6 @@
+/venv/
+/*.mod
+/*.o
+/*.so
+/*.so.dSYM
+/test_mcc
