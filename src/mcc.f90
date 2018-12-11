@@ -1,42 +1,63 @@
 module mcc
 
 use iso_fortran_env, only: dp => real64
+use ieee_arithmetic, only: ieee_is_finite
 
 implicit none
 
-private
-public :: simulate_annealing, get_resistance, random_integer
-
 contains
 
-subroutine simulate_annealing(circuit, n_nodes, target_resistance, n_steps)
+subroutine simulate_annealing( &
+    circuit, &
+    n_nodes, &
+    target_resistance, &
+    temperature_start, &
+    anneal_kind, &
+    n_steps, &
+    trajectory &
+)
     integer, intent(inout) :: circuit(:, :)
     integer, intent(in) :: n_nodes
     real(8), intent(in) :: target_resistance
+    real(8), intent(in) :: temperature_start
+    character(len=*), intent(in) :: anneal_kind
     integer, intent(in) :: n_steps
+    real(8), intent(out), optional :: trajectory(n_steps)
 
     integer, allocatable :: circuit_best(:, :), circuit_previous(:, :)
     real(8) :: energy, energy_best, energy_previous
     integer :: i_step
     real(8) :: temperature, rand
 
-    do i_step = 0, n_steps
-        temperature = 1d-3*(1d0-dble(i_step)/n_steps)
+    temperature = temperature_start
+    circuit_previous = circuit
+    circuit_best = circuit
+    energy_previous = abs(get_resistance(circuit)-target_resistance)
+    energy_best = energy_previous
+    i_step = 0
+    do while (i_step < n_steps)
+        circuit = switch_resistor(circuit_previous, n_nodes)
         energy = abs(get_resistance(circuit)-target_resistance)
+        if (.not. ieee_is_finite(energy)) cycle
+        i_step = i_step + 1
         call random_number(rand)
-        if (rand < exp((energy_previous-energy)/temperature) .or. i_step == 0) then
+        if (exp((energy_previous-energy)/temperature) > rand) then
             energy_previous = energy
             circuit_previous = circuit
-            if (energy < energy_best .or. i_step == 0) then
+            if (energy < energy_best) then
                 energy_best = energy
                 circuit_best = circuit
-                print *, 'steps:', i_step, 'E:', energy
+                print *, 'steps:', i_step, 'E:', energy, 'T:', temperature
             end if
         end if
-        circuit = switch_resistor(circuit_previous, n_nodes)
+        if (present(trajectory)) trajectory(i_step) = energy_previous
+        select case (anneal_kind)
+        case ('linear')
+            temperature = temperature - temperature_start/n_steps
+        case ('constant')
+        end select
     end do
     circuit = circuit_best
-
 end subroutine
 
 function switch_resistor(circuit, n_nodes) result(switched)
@@ -76,6 +97,7 @@ real(8) function get_resistance(circuit) result(res)
         end forall
     end do
     current = (work(1, 1)-work(1, 2))/2
+    if (current < 0) current = 0d0
     res = 1d0/current
 end function
 
