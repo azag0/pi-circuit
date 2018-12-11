@@ -5,6 +5,8 @@ use ieee_arithmetic, only: ieee_is_finite
 
 implicit none
 
+! f2py has troubles with public/private access
+
 contains
 
 subroutine simulate_annealing( &
@@ -18,16 +20,16 @@ subroutine simulate_annealing( &
 )
     integer, intent(inout) :: circuit(:, :)
     integer, intent(in) :: n_nodes
-    real(8), intent(in) :: target_resistance
+    real(8), intent(in) :: target_resistance  ! f2py cannot do real(dp)
     real(8), intent(in) :: temperature_start
     character(len=*), intent(in) :: anneal_kind
     integer, intent(in) :: n_steps
     real(8), intent(out), optional :: trajectory(n_steps)
 
     integer, allocatable :: circuit_best(:, :), circuit_previous(:, :)
-    real(8) :: energy, energy_best, energy_previous
+    real(dp) :: energy, energy_best, energy_previous
     integer :: i_step
-    real(8) :: temperature, rand
+    real(dp) :: temperature, rand
 
     temperature = temperature_start
     circuit_previous = circuit
@@ -74,11 +76,12 @@ function switch_resistor(circuit, n_nodes) result(switched)
     switched(:, i_resistor) = [i_node, j_node]
 end function
 
-real(8) function get_resistance(circuit) result(res)
+function get_resistance(circuit) result(res)
     integer, intent(in) :: circuit(:, :)
+    real(8) :: res  ! f2py doesn't understand real(8) function...
 
-    real(8), allocatable :: work(:, :)
-    real(8) :: current
+    real(dp), allocatable :: work(:, :)
+    real(dp) :: current
     integer :: i_node, j_node, k_node, n_nodes, i_resistor
 
     n_nodes = maxval(circuit)
@@ -105,7 +108,7 @@ subroutine random_integer(rand, nmax)
     integer, intent(out) :: rand
     integer, intent(in) :: nmax
 
-    real(8) :: rand_real
+    real(dp) :: rand_real
 
     call random_number(rand_real)
     rand = 1 + int(rand_real*nmax)
