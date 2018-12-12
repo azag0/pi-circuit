@@ -1,7 +1,6 @@
 program main
 
 use iso_fortran_env, only: dp => real64
-use ieee_arithmetic, only: ieee_is_finite
 
 use mcc, only: simulate_annealing, get_resistance
 
@@ -18,7 +17,8 @@ integer, allocatable :: circuit(:, :)
 allocate (circuit(2, n_resistors))
 circuit(1, :) = 1
 circuit(2, :) = 2
-call simulate_annealing(circuit, n_nodes, pi, 1d-3, 'linear', n_steps)
-print *, pi, get_resistance(circuit)
+call simulate_annealing(circuit, n_nodes, pi, [1d-3, 0d0], 'linear', n_steps)
+print *, pi
+print *, get_resistance(circuit)
 
 end program

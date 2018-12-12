@@ -13,15 +13,15 @@ subroutine simulate_annealing( &
     circuit, &
     n_nodes, &
     target_resistance, &
-    temperature_start, &
+    temperature_interval, &
     anneal_kind, &
     n_steps, &
     trajectory &
 )
-    integer, intent(inout) :: circuit(:, :)
+    integer, intent(inout) :: circuit(:, :)  ! 4-byte integer
     integer, intent(in) :: n_nodes
     real(8), intent(in) :: target_resistance  ! f2py cannot do real(dp)
-    real(8), intent(in) :: temperature_start
+    real(8), intent(in) :: temperature_interval(2)
     character(len=*), intent(in) :: anneal_kind
     integer, intent(in) :: n_steps
     real(8), intent(out), optional :: trajectory(n_steps)
@@ -31,7 +31,7 @@ subroutine simulate_annealing( &
     integer :: i_step
     real(dp) :: temperature, rand
 
-    temperature = temperature_start
+    temperature = temperature_interval(1)
     circuit_previous = circuit
     circuit_best = circuit
     energy_previous = abs(get_resistance(circuit)-target_resistance)
@@ -55,7 +55,11 @@ subroutine simulate_annealing( &
         if (present(trajectory)) trajectory(i_step) = energy_previous
         select case (anneal_kind)
         case ('linear')
-            temperature = temperature - temperature_start/n_steps
+            temperature = temperature &
+                - (temperature_interval(1)-temperature_interval(2))/n_steps
+        case ('exponential')
+            temperature = temperature &
+                * (temperature_interval(2)/temperature_interval(1))**(1d0/n_steps)
         case ('constant')
         end select
     end do
